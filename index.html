@@ -721,8 +721,7 @@ async function generarCredencialesPDF() {
       const imagen = 'data:' + foto.tipo +
         ';base64,' + foto.imagenBase64;
 
-      const logoURL =
-        'https://drive.google.com/uc?export=view&id=155uUIl5EyLNmmjlV5KwkIeQXhVf6Bm7h';
+      const logoURL = './logo-jomac.JPEG';
 
       const logo = await cargarImagenPDF(logoURL);
 
