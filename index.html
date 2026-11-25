@@ -824,31 +824,8 @@ async function generarCredencialesPDF() {
 
 
 
-async function cargarImagenPDF(url) {
-  const respuesta = await fetch(url);
 
-  if (!respuesta.ok) {
-    throw new Error('No se pudo descargar el logotipo.');
-  }
-
-  const blob = await respuesta.blob();
-
-  if (!blob.type.startsWith('image/')) {
-    throw new Error('El archivo del logotipo no es una imagen válida.');
-  }
-
-  return await new Promise((resolve, reject) => {
-    const lector = new FileReader();
-
-    lector.onload = () => resolve(lector.result);
-    lector.onerror = () => reject(
-      new Error('No se pudo procesar el logotipo.')
-    );
-
-    lector.readAsDataURL(blob);
-  });
-}
-
+  
 async function mostrarTrabajadoresCredencial() {
   if (!tokenSesion) {
     mostrarMensaje('Inicia sesión SHE para continuar.');
@@ -927,8 +904,7 @@ async function generarCredencialIndividual() {
 
     const imagen = 'data:' + foto.tipo + ';base64,' + foto.imagenBase64;
 
-    const logoURL =
-      'https://drive.google.com/uc?export=view&id=155uUIl5EyLNmmjlV5KwkIeQXhVf6Bm7h';
+const logoURL = './logo-jomac.jpeg';
 
     const logo = await cargarImagenPDF(logoURL);
 
