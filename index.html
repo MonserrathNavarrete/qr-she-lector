@@ -823,29 +823,29 @@ async function generarCredencialesPDF() {
 }
 
 
-function cargarImagenPDF(url) {
-  return new Promise((resolve, reject) => {
-    const imagen = new Image();
 
-    imagen.onload = () => {
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = imagen.naturalWidth;
-        canvas.height = imagen.naturalHeight;
+async function cargarImagenPDF(url) {
+  const respuesta = await fetch(url);
 
-        canvas.getContext('2d').drawImage(imagen, 0, 0);
+  if (!respuesta.ok) {
+    throw new Error('No se pudo descargar el logotipo.');
+  }
 
-        resolve(canvas.toDataURL('image/png'));
-      } catch (error) {
-        reject(new Error('No se pudo procesar el logotipo.'));
-      }
-    };
+  const blob = await respuesta.blob();
 
-    imagen.onerror = () => reject(
-      new Error('No se pudo descargar el logotipo.')
+  if (!blob.type.startsWith('image/')) {
+    throw new Error('El archivo del logotipo no es una imagen válida.');
+  }
+
+  return await new Promise((resolve, reject) => {
+    const lector = new FileReader();
+
+    lector.onload = () => resolve(lector.result);
+    lector.onerror = () => reject(
+      new Error('No se pudo procesar el logotipo.')
     );
 
-    imagen.src = url;
+    lector.readAsDataURL(blob);
   });
 }
 
