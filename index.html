@@ -198,6 +198,64 @@
       Sesión SHE activa. Lista para registrar movimientos.
     </p>
 
+<div class="separador"></div>
+
+<section id="administracionPersonal">
+  <h2>Administración de personal</h2>
+  <p class="descripcion">
+    Registro de trabajadores y contratistas.
+  </p>
+
+  <button class="secundario" type="button"
+    onclick="mostrarFormularioPersonal()">
+    + REGISTRAR TRABAJADOR
+  </button>
+
+  <div id="formularioPersonal" class="trabajador oculto">
+    <h2>Alta de trabajador</h2>
+
+    <label for="nuevoNombre">Nombre completo *</label>
+    <input id="nuevoNombre" type="text" placeholder="Nombre y apellidos">
+
+    <label for="nuevaEmpresa">Empresa o contratista *</label>
+    <input id="nuevaEmpresa" type="text" placeholder="Nombre de la empresa">
+
+    <label for="nuevoPuesto">Puesto *</label>
+    <input id="nuevoPuesto" type="text" placeholder="Ej. Oficial albañil">
+
+    <label for="nuevaEspecialidad">Especialidad</label>
+    <input id="nuevaEspecialidad" type="text" placeholder="Ej. Albañilería, electricidad">
+
+    <div class="separador"></div>
+
+    <h2>Información para emergencias</h2>
+
+    <label for="nuevasAlergias">Alergias</label>
+    <input id="nuevasAlergias" type="text" placeholder="Indicar ninguna si no presenta">
+
+    <label for="nuevoTipoSangre">Tipo de sangre</label>
+    <input id="nuevoTipoSangre" type="text" placeholder="Ej. O positivo">
+
+    <label for="nuevoContacto">Contacto de emergencia</label>
+    <input id="nuevoContacto" type="text" placeholder="Nombre del contacto">
+
+    <label for="nuevoTelefono">Teléfono de emergencia</label>
+    <input id="nuevoTelefono" type="tel" inputmode="tel" placeholder="Número telefónico">
+
+    <button type="button" id="btnGuardarTrabajador"
+      onclick="guardarNuevoTrabajador()">
+      GUARDAR TRABAJADOR
+    </button>
+
+    <button type="button" class="secundario"
+      onclick="ocultarFormularioPersonal()">
+      CANCELAR
+    </button>
+  </div>
+</section>
+
+<div class="separador"></div>
+
     <button id="btnLector" onclick="activarLector()">
       ACTIVAR LECTOR QR
     </button>
@@ -436,6 +494,83 @@ async function cerrarSesion() {
 
   mostrarMensaje('Sesión SHE cerrada.');
 }
+  
+function mostrarFormularioPersonal() {
+  document.getElementById('formularioPersonal')
+    .classList.remove('oculto');
+
+  mostrarMensaje('Formulario de alta de trabajador.');
+}
+
+function ocultarFormularioPersonal() {
+  document.getElementById('formularioPersonal')
+    .classList.add('oculto');
+
+  mostrarMensaje('Registro cancelado.');
+}
+
+async function guardarNuevoTrabajador() {
+  const boton = document.getElementById('btnGuardarTrabajador');
+
+  const datos = {
+    action: 'registrarTrabajador',
+    tokenSesion: tokenSesion,
+
+    nombre: document.getElementById('nuevoNombre').value.trim(),
+    empresa: document.getElementById('nuevaEmpresa').value.trim(),
+    puesto: document.getElementById('nuevoPuesto').value.trim(),
+    especialidad: document.getElementById('nuevaEspecialidad').value.trim(),
+
+    alergias: document.getElementById('nuevasAlergias').value.trim(),
+    tipoSangre: document.getElementById('nuevoTipoSangre').value.trim(),
+    contactoEmergencia: document.getElementById('nuevoContacto').value.trim(),
+    telefonoEmergencia: document.getElementById('nuevoTelefono').value.trim()
+  };
+
+  if (!datos.nombre || !datos.empresa || !datos.puesto) {
+    mostrarMensaje('Completa nombre, empresa y puesto.');
+    return;
+  }
+
+  if (!tokenSesion) {
+    mostrarMensaje('Tu sesión SHE ha vencido. Inicia sesión nuevamente.');
+    return;
+  }
+
+  boton.disabled = true;
+  mostrarMensaje('Guardando trabajador...');
+
+  try {
+    const resultado = await llamarAPI(datos);
+
+    document.getElementById('formularioPersonal')
+      .classList.add('oculto');
+
+    [
+      'nuevoNombre',
+      'nuevaEmpresa',
+      'nuevoPuesto',
+      'nuevaEspecialidad',
+      'nuevasAlergias',
+      'nuevoTipoSangre',
+      'nuevoContacto',
+      'nuevoTelefono'
+    ].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+
+    mostrarMensaje(
+      'Trabajador registrado correctamente: ' +
+      resultado.nombre + ' · Folio: ' + resultado.id
+    );
+
+  } catch (error) {
+    mostrarMensaje('No se pudo registrar: ' + error.message);
+  } finally {
+    boton.disabled = false;
+  }
+}
+
 </script>
 
 </body>
