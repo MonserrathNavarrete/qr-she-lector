@@ -846,6 +846,43 @@ function cargarImagenPDF(url) {
   });
 }
 
+async function mostrarTrabajadoresCredencial() {
+  if (!tokenSesion) {
+    mostrarMensaje('Inicia sesión SHE para continuar.');
+    return;
+  }
+
+  try {
+    mostrarMensaje('Consultando trabajadores activos...');
+
+    const personal = await llamarAPI({
+      action: 'listarCredenciales',
+      tokenSesion: tokenSesion
+    });
+
+    const selector = document.getElementById('trabajadorCredencial');
+    selector.innerHTML = '<option value="">Selecciona una persona</option>';
+
+    personal.forEach(trabajador => {
+      const opcion = document.createElement('option');
+      opcion.value = trabajador.id;
+      opcion.textContent = trabajador.nombre + ' - ' + trabajador.empresa;
+      selector.appendChild(opcion);
+    });
+
+    document.getElementById('selectorCredencial').style.display = 'block';
+
+    mostrarMensaje(
+      personal.length
+        ? 'Selecciona al trabajador para generar su credencial.'
+        : 'No hay trabajadores activos registrados.'
+    );
+
+  } catch (error) {
+    mostrarMensaje('Error al consultar personal: ' + error.message);
+  }
+}
+
 </script>
 
 </body>
