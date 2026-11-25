@@ -241,7 +241,20 @@
 
     <label for="nuevoTelefono">Teléfono de emergencia</label>
     <input id="nuevoTelefono" type="tel" inputmode="tel" placeholder="Número telefónico">
+<div class="separador"></div>
 
+<h2>Fotografía del trabajador</h2>
+
+<label for="fotoTrabajador">Seleccionar o tomar fotografía *</label>
+<input
+  id="fotoTrabajador"
+  type="file"
+  accept="image/*"
+>
+<p class="descripcion">
+  Puedes tomar una fotografía con tu celular o seleccionar
+  una imagen de tu galería o computadora.
+</p>
     <button type="button" id="btnGuardarTrabajador"
       onclick="guardarNuevoTrabajador()">
       GUARDAR TRABAJADOR
