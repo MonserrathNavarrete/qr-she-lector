@@ -212,9 +212,23 @@
     onclick="mostrarFormularioPersonal()">
     + REGISTRAR TRABAJADOR
   </button>
-<button type="button" onclick="generarCredencialesPDF()">
-  DESCARGAR CREDENCIALES PDF
-</button>
+<div>
+  <button type="button" onclick="mostrarTrabajadoresCredencial()">
+    GENERAR CREDENCIAL INDIVIDUAL
+  </button>
+
+  <div id="selectorCredencial" style="display:none; margin-top:15px;">
+    <label for="trabajadorCredencial">Selecciona al trabajador:</label>
+
+    <select id="trabajadorCredencial">
+      <option value="">Selecciona una persona</option>
+    </select>
+
+    <button type="button" onclick="generarCredencialIndividual()">
+      GENERAR PDF
+    </button>
+  </div>
+</div>
   <div id="formularioPersonal" class="trabajador oculto">
     <h2>Alta de trabajador</h2>
 
