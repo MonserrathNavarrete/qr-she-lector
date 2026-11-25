@@ -4,102 +4,439 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#171923">
-  <title>QR-SHE 2.0 | Lector</title>
+  <meta name="theme-color" content="#11131b">
+  <title>QR-SHE 2.0 | Control de personal</title>
+
+  <script src="https://unpkg.com/html5-qrcode"></script>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
       min-height: 100vh;
-      padding: 24px;
+      padding: 22px;
       background: #11131b;
       color: #f5f5f7;
       font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
     }
 
     .contenedor {
       width: 100%;
-      max-width: 480px;
+      max-width: 520px;
+      margin: 35px auto;
+      padding: 28px;
       background: #1d202b;
       border: 1px solid #343847;
-      border-radius: 20px;
-      padding: 28px;
-      text-align: center;
+      border-radius: 22px;
+      box-shadow: 0 15px 45px #0005;
     }
 
     .marca {
       color: #b69cff;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: bold;
       letter-spacing: 3px;
+      text-align: center;
     }
 
     h1 {
       margin: 12px 0 8px;
-      font-size: 28px;
+      text-align: center;
+      font-size: 29px;
     }
 
     .descripcion {
       color: #b6bac8;
       font-size: 14px;
       line-height: 1.5;
+      text-align: center;
+    }
+
+    .separador {
+      height: 1px;
+      margin: 25px 0;
+      background: #343847;
+    }
+
+    label {
+      display: block;
+      margin: 16px 0 8px;
+      color: #d7d9e2;
+      font-size: 13px;
+    }
+
+    input {
+      width: 100%;
+      padding: 15px;
+      border: 1px solid #454a5c;
+      border-radius: 12px;
+      background: #11131b;
+      color: white;
+      font-size: 18px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #b69cff;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 16px;
+      padding: 15px;
+      border: 0;
+      border-radius: 12px;
+      background: #9b7bea;
+      color: #171321;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .secundario {
+      background: #343847;
+      color: white;
+    }
+
+    .peligro {
+      background: #663b50;
+      color: white;
     }
 
     .estado {
-      margin: 25px 0;
-      padding: 15px;
+      margin-top: 18px;
+      padding: 14px;
       border-radius: 12px;
       background: #292d3a;
+      color: #d7d9e2;
+      font-size: 13px;
+      line-height: 1.5;
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
+
+    .oculto { display: none; }
+
+    #lector {
+      width: 100%;
+      margin-top: 20px;
+      overflow: hidden;
+      border-radius: 14px;
+    }
+
+    .trabajador {
+      margin-top: 20px;
+      padding: 18px;
+      background: #292d3a;
+      border: 1px solid #454a5c;
+      border-radius: 14px;
+    }
+
+    .trabajador h2 {
+      margin-top: 0;
+      color: #c6adff;
+      font-size: 19px;
+    }
+
+    .dato {
+      margin: 10px 0;
       color: #d7d9e2;
       font-size: 14px;
     }
 
-    .indicador {
-      display: inline-block;
-      width: 9px;
-      height: 9px;
-      margin-right: 7px;
-      border-radius: 50%;
-      background: #e8b65d;
-    }
-
-    .nota {
-      margin-top: 25px;
+    .pie {
+      margin-top: 28px;
       color: #858b9c;
-      font-size: 12px;
+      font-size: 11px;
+      text-align: center;
+      letter-spacing: 1px;
     }
   </style>
 </head>
 
 <body>
-  <main class="contenedor">
-    <div class="marca">CONTROL DE PERSONAL</div>
 
-    <h1>QR-SHE 2.0</h1>
+<main class="contenedor">
 
+  <div class="marca">CONTROL DE PERSONAL</div>
+  <h1>QR-SHE 2.0</h1>
+  <p class="descripcion">
+    Sistema de control de entradas y salidas de personal de obra.
+  </p>
+
+  <div class="separador"></div>
+
+  <section id="pantallaLogin">
+    <h2>Acceso SHE</h2>
     <p class="descripcion">
-      Sistema de control de entradas y salidas de personal de obra.
+      Ingresa tu clave de seguridad para iniciar operaciones.
     </p>
 
-    <div class="estado">
-      <span class="indicador"></span>
-      Interfaz inicial creada correctamente.
-    </div>
+    <label for="pin">PIN de acceso</label>
+    <input
+      id="pin"
+      type="password"
+      inputmode="numeric"
+      autocomplete="off"
+      placeholder="Ingresa tu PIN"
+    >
 
+    <button id="btnLogin" onclick="iniciarSesion()">
+      INICIAR SESIÓN
+    </button>
+  </section>
+
+  <section id="pantallaControl" class="oculto">
+    <h2>Panel de control</h2>
     <p class="descripcion">
-      Próximamente: lector de credenciales QR.
+      Sesión SHE activa. Lista para registrar movimientos.
     </p>
 
-    <div class="nota">
-      SHE · SEGURIDAD, HIGIENE Y MEDIO AMBIENTE
+    <button id="btnLector" onclick="activarLector()">
+      ACTIVAR LECTOR QR
+    </button>
+
+    <div id="lector"></div>
+
+    <div id="resultadoTrabajador" class="trabajador oculto">
+      <h2 id="nombreTrabajador"></h2>
+      <div class="dato" id="empresaTrabajador"></div>
+      <div class="dato" id="puestoTrabajador"></div>
+      <div class="dato" id="estadoMovimiento"></div>
+
+      <button id="btnRegistrar" onclick="registrarMovimiento()">
+        CONFIRMAR MOVIMIENTO
+      </button>
+
+      <button class="secundario" onclick="cancelarLectura()">
+        CANCELAR
+      </button>
     </div>
-  </main>
+
+    <button class="peligro" onclick="cerrarSesion()">
+      CERRAR SESIÓN
+    </button>
+  </section>
+
+  <div id="mensaje" class="estado">
+    Sistema listo para iniciar.
+  </div>
+
+  <div class="pie">
+    SHE · SEGURIDAD, HIGIENE Y MEDIO AMBIENTE
+  </div>
+
+</main>
+
+<script>
+const API_URL = 'https://qr-she-api.jomac-sheq01.workers.dev/';
+
+let tokenSesion = '';
+let lectorQR = null;
+let tokenQRActual = '';
+let movimientoActual = '';
+
+async function llamarAPI(datos) {
+  const respuesta = await fetch(API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(datos)
+  });
+
+  const resultado = await respuesta.json();
+
+  if (!respuesta.ok || !resultado.correcto) {
+    throw new Error(resultado.error || 'Error de comunicación.');
+  }
+
+  return resultado.resultado;
+}
+
+function mostrarMensaje(texto) {
+  document.getElementById('mensaje').textContent = texto;
+}
+
+async function iniciarSesion() {
+  const pin = document.getElementById('pin').value;
+  const boton = document.getElementById('btnLogin');
+
+  if (!pin.trim()) {
+    mostrarMensaje('Ingresa tu PIN de acceso.');
+    return;
+  }
+
+  boton.disabled = true;
+  mostrarMensaje('Validando acceso SHE...');
+
+  try {
+    const resultado = await llamarAPI({
+      action: 'login',
+      pin: pin
+    });
+
+    tokenSesion = resultado.tokenSesion;
+
+    document.getElementById('pin').value = '';
+    document.getElementById('pantallaLogin').classList.add('oculto');
+    document.getElementById('pantallaControl').classList.remove('oculto');
+
+    mostrarMensaje('Sesión SHE iniciada correctamente.');
+
+  } catch (error) {
+    mostrarMensaje(error.message);
+  } finally {
+    boton.disabled = false;
+  }
+}
+
+async function activarLector() {
+  const boton = document.getElementById('btnLector');
+  boton.disabled = true;
+
+  try {
+    if (!lectorQR) {
+      lectorQR = new Html5Qrcode('lector');
+    }
+
+    mostrarMensaje('Solicitando acceso a la cámara...');
+
+    await lectorQR.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 230, height: 230 } },
+      async texto => {
+        tokenQRActual = texto.trim();
+        await detenerLector();
+
+        mostrarMensaje('Credencial detectada. Consultando trabajador...');
+
+        try {
+          const resultado = await llamarAPI({
+            action: 'consultar',
+            tokenQR: tokenQRActual,
+            tokenSesion: tokenSesion
+          });
+
+          movimientoActual = resultado.siguienteMovimiento;
+
+          document.getElementById('nombreTrabajador').textContent =
+            resultado.trabajador.nombre;
+
+          document.getElementById('empresaTrabajador').textContent =
+            'Empresa: ' + resultado.trabajador.empresa;
+
+          document.getElementById('puestoTrabajador').textContent =
+            'Puesto: ' + resultado.trabajador.puesto;
+
+          document.getElementById('estadoMovimiento').textContent =
+            'Movimiento: ' + movimientoActual;
+
+          document.getElementById('resultadoTrabajador')
+            .classList.remove('oculto');
+
+          document.getElementById('btnRegistrar').disabled =
+            movimientoActual === 'COMPLETADO';
+
+          mostrarMensaje('Trabajador identificado correctamente.');
+
+        } catch (error) {
+          tokenQRActual = '';
+          mostrarMensaje(error.message);
+        }
+      },
+      error => {}
+    );
+
+    mostrarMensaje('Cámara activa. Escanea una credencial QR.');
+
+  } catch (error) {
+    mostrarMensaje('No se pudo activar la cámara: ' + error.message);
+    boton.disabled = false;
+  }
+}
+
+async function detenerLector() {
+  if (lectorQR && lectorQR.isScanning) {
+    await lectorQR.stop();
+  }
+
+  document.getElementById('btnLector').disabled = false;
+}
+
+async function registrarMovimiento() {
+  if (!tokenQRActual || !tokenSesion) {
+    mostrarMensaje('No hay una credencial lista para registrar.');
+    return;
+  }
+
+  const boton = document.getElementById('btnRegistrar');
+  boton.disabled = true;
+
+  try {
+    const resultado = await llamarAPI({
+      action: 'registrar',
+      tokenQR: tokenQRActual,
+      tokenSesion: tokenSesion
+    });
+
+    mostrarMensaje(
+      resultado.movimiento + ' registrada correctamente. ' +
+      resultado.nombre + ' · ' + resultado.hora
+    );
+
+    document.getElementById('resultadoTrabajador')
+      .classList.add('oculto');
+
+    tokenQRActual = '';
+    movimientoActual = '';
+
+  } catch (error) {
+    mostrarMensaje(error.message);
+    boton.disabled = false;
+  }
+}
+
+async function cancelarLectura() {
+  await detenerLector();
+
+  tokenQRActual = '';
+  movimientoActual = '';
+
+  document.getElementById('resultadoTrabajador')
+    .classList.add('oculto');
+
+  mostrarMensaje('Lectura cancelada.');
+}
+
+async function cerrarSesion() {
+  await detenerLector();
+
+  try {
+    await llamarAPI({
+      action: 'logout',
+      tokenSesion: tokenSesion
+    });
+  } catch (error) {
+    console.error(error);
+  }
+
+  tokenSesion = '';
+  tokenQRActual = '';
+
+  document.getElementById('pantallaControl').classList.add('oculto');
+  document.getElementById('pantallaLogin').classList.remove('oculto');
+  document.getElementById('resultadoTrabajador').classList.add('oculto');
+
+  mostrarMensaje('Sesión SHE cerrada.');
+}
+</script>
+
 </body>
 </html>
