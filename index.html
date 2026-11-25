@@ -823,23 +823,27 @@ async function generarCredencialesPDF() {
   }
 }
 
+
 function cargarImagenPDF(url) {
   return new Promise((resolve, reject) => {
     const imagen = new Image();
-    imagen.crossOrigin = 'anonymous';
 
     imagen.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = imagen.naturalWidth;
-      canvas.height = imagen.naturalHeight;
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = imagen.naturalWidth;
+        canvas.height = imagen.naturalHeight;
 
-      canvas.getContext('2d').drawImage(imagen, 0, 0);
+        canvas.getContext('2d').drawImage(imagen, 0, 0);
 
-      resolve(canvas.toDataURL('image/png'));
+        resolve(canvas.toDataURL('image/png'));
+      } catch (error) {
+        reject(new Error('No se pudo procesar el logotipo.'));
+      }
     };
 
     imagen.onerror = () => reject(
-      new Error('No se pudo cargar el logotipo de la empresa.')
+      new Error('No se pudo descargar el logotipo.')
     );
 
     imagen.src = url;
