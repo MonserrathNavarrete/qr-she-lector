@@ -883,6 +883,161 @@ async function mostrarTrabajadoresCredencial() {
   }
 }
 
+async function generarCredencialIndividual() {
+  if (!tokenSesion) {
+    mostrarMensaje('Inicia sesión SHE para continuar.');
+    return;
+  }
+
+  const idTrabajador = document.getElementById('trabajadorCredencial').value;
+
+  if (!idTrabajador) {
+    mostrarMensaje('Primero selecciona un trabajador.');
+    return;
+  }
+
+  try {
+    mostrarMensaje('Preparando credencial individual...');
+
+    const personal = await llamarAPI({
+      action: 'listarCredenciales',
+      tokenSesion: tokenSesion
+    });
+
+    const trabajador = personal.find(
+      persona => String(persona.id) === String(idTrabajador)
+    );
+
+    if (!trabajador) {
+      throw new Error('No se encontró al trabajador seleccionado.');
+    }
+
+    if (!trabajador.tieneFotografia) {
+      throw new Error('Este trabajador todavía no tiene fotografía.');
+    }
+
+    const foto = await llamarAPI({
+      action: 'obtenerFotografia',
+      tokenSesion: tokenSesion,
+      idTrabajador: trabajador.id
+    });
+
+    const imagen = 'data:' + foto.tipo + ';base64,' + foto.imagenBase64;
+
+    const logoURL =
+      'https://drive.google.com/uc?export=view&id=155uUIl5EyLNmmjlV5KwkIeQXhVf6Bm7h';
+
+    const logo = await cargarImagenPDF(logoURL);
+
+    const pdf = new jspdf.jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: [85.6, 54]
+    });
+
+    // Fondo
+    pdf.setFillColor(24, 20, 38);
+    pdf.rect(0, 0, 85.6, 54, 'F');
+
+    // Franja superior
+    pdf.setFillColor(139, 105, 205);
+    pdf.rect(0, 0, 85.6, 13, 'F');
+
+    // Logotipo
+    pdf.addImage(logo, 'PNG', 3, 2, 10, 9);
+
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(7);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('IDENTIFICACIÓN DE PERSONAL', 15, 6);
+    pdf.setFontSize(5);
+    pdf.text('QR-SHE 2.0', 15, 9);
+
+    // Fotografía
+    pdf.addImage(imagen, 'JPEG', 4, 17, 21, 25);
+
+    // Nombre
+    pdf.setFontSize(7);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(
+      pdf.splitTextToSize(trabajador.nombre || '', 54),
+      28,
+      19
+    );
+
+    // Datos
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(5.5);
+
+    let y = 26;
+
+    const lineas = [
+      'Puesto: ' + (trabajador.puesto || 'No especificado'),
+      'Especialidad: ' + (trabajador.especialidad || 'No especificada'),
+      'Empresa: ' + (trabajador.empresa || 'No especificada'),
+      'Sangre: ' + trabajador.tipoSangre,
+      'Alergias: ' + trabajador.alergias
+    ];
+
+    lineas.forEach(texto => {
+      const partes = pdf.splitTextToSize(texto, 53);
+      pdf.text(partes, 28, y);
+      y += partes.length * 3.2;
+    });
+
+    // Código QR: contiene únicamente el token
+    const contenedorQR = document.createElement('div');
+
+    new QRCode(contenedorQR, {
+      text: trabajador.token,
+      width: 160,
+      height: 160,
+      correctLevel: QRCode.CorrectLevel.M
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 150));
+
+    const qrCanvas = contenedorQR.querySelector('canvas');
+
+    if (!qrCanvas) {
+      throw new Error('No se pudo generar el código QR.');
+    }
+
+    pdf.addImage(
+      qrCanvas.toDataURL('image/png'),
+      'PNG',
+      66,
+      35,
+      15,
+      15
+    );
+
+    // Contacto de emergencia
+    pdf.setFontSize(4.5);
+    pdf.text(
+      pdf.splitTextToSize(
+        'Emergencia: ' + trabajador.contactoEmergencia,
+        59
+      ),
+      4,
+      47
+    );
+
+    pdf.text(
+      'Tel: ' + trabajador.telefonoEmergencia,
+      4,
+      51
+    );
+
+    pdf.save('QR-SHE-' + trabajador.id + '.pdf');
+
+    mostrarMensaje('Credencial individual generada correctamente.');
+
+  } catch (error) {
+    mostrarMensaje('No se pudo generar la credencial: ' + error.message);
+  }
+}
+
 </script>
 
 </body>
