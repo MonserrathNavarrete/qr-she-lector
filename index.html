@@ -522,6 +522,60 @@ function ocultarFormularioPersonal() {
   mostrarMensaje('Registro cancelado.');
 }
 
+
+function comprimirFotografia(archivo) {
+  return new Promise((resolve, reject) => {
+    if (!archivo || !archivo.type.startsWith('image/')) {
+      reject(new Error('Selecciona una fotografía válida.'));
+      return;
+    }
+
+    const lector = new FileReader();
+
+    lector.onload = () => {
+      const imagen = new Image();
+
+      imagen.onload = () => {
+        const maxAncho = 600;
+        const maxAlto = 800;
+
+        const escala = Math.min(
+          maxAncho / imagen.width,
+          maxAlto / imagen.height,
+          1
+        );
+
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(imagen.width * escala);
+        canvas.height = Math.round(imagen.height * escala);
+
+        const contexto = canvas.getContext('2d');
+        contexto.drawImage(
+          imagen,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+        resolve(canvas.toDataURL('image/jpeg', 0.75));
+      };
+
+      imagen.onerror = () => reject(
+        new Error('No se pudo procesar la fotografía.')
+      );
+
+      imagen.src = lector.result;
+    };
+
+    lector.onerror = () => reject(
+      new Error('No se pudo leer el archivo.')
+    );
+
+    lector.readAsDataURL(archivo);
+  });
+}
+
 async function guardarNuevoTrabajador() {
   const boton = document.getElementById('btnGuardarTrabajador');
 
@@ -540,8 +594,15 @@ async function guardarNuevoTrabajador() {
     telefonoEmergencia: document.getElementById('nuevoTelefono').value.trim()
   };
 
+  const archivo = document.getElementById('fotoTrabajador').files[0];
+
   if (!datos.nombre || !datos.empresa || !datos.puesto) {
     mostrarMensaje('Completa nombre, empresa y puesto.');
+    return;
+  }
+
+  if (!archivo) {
+    mostrarMensaje('Selecciona la fotografía del trabajador.');
     return;
   }
 
@@ -551,10 +612,23 @@ async function guardarNuevoTrabajador() {
   }
 
   boton.disabled = true;
-  mostrarMensaje('Guardando trabajador...');
+  let trabajadorRegistrado = null;
 
   try {
-    const resultado = await llamarAPI(datos);
+    mostrarMensaje('Registrando trabajador...');
+
+    trabajadorRegistrado = await llamarAPI(datos);
+
+    mostrarMensaje('Comprimiendo y guardando fotografía...');
+
+    const imagenBase64 = await comprimirFotografia(archivo);
+
+    await llamarAPI({
+      action: 'guardarFotografia',
+      tokenSesion: tokenSesion,
+      idTrabajador: trabajadorRegistrado.id,
+      imagenBase64: imagenBase64
+    });
 
     document.getElementById('formularioPersonal')
       .classList.add('oculto');
@@ -567,22 +641,34 @@ async function guardarNuevoTrabajador() {
       'nuevasAlergias',
       'nuevoTipoSangre',
       'nuevoContacto',
-      'nuevoTelefono'
+      'nuevoTelefono',
+      'fotoTrabajador'
     ].forEach(id => {
       document.getElementById(id).value = '';
     });
 
     mostrarMensaje(
-      'Trabajador registrado correctamente: ' +
-      resultado.nombre + ' · Folio: ' + resultado.id
+      'Trabajador y fotografía registrados correctamente: ' +
+      trabajadorRegistrado.nombre +
+      ' · Folio: ' + trabajadorRegistrado.id
     );
 
   } catch (error) {
-    mostrarMensaje('No se pudo registrar: ' + error.message);
+    if (trabajadorRegistrado) {
+      mostrarMensaje(
+        'El trabajador quedó registrado con folio ' +
+        trabajadorRegistrado.id +
+        ', pero no se pudo guardar su fotografía: ' +
+        error.message
+      );
+    } else {
+      mostrarMensaje('No se pudo registrar: ' + error.message);
+    }
   } finally {
     boton.disabled = false;
   }
 }
+
 
 </script>
 
