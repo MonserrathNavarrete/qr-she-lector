@@ -212,7 +212,9 @@
     onclick="mostrarFormularioPersonal()">
     + REGISTRAR TRABAJADOR
   </button>
-
+<button type="button" onclick="generarCredencialesPDF()">
+  DESCARGAR CREDENCIALES PDF
+</button>
   <div id="formularioPersonal" class="trabajador oculto">
     <h2>Alta de trabajador</h2>
 
@@ -671,6 +673,164 @@ async function guardarNuevoTrabajador() {
   }
 }
 
+async function generarCredencialesPDF() {
+  if (!tokenSesion) {
+    mostrarMensaje('Inicia sesión SHE para generar credenciales.');
+    return;
+  }
+
+  try {
+    mostrarMensaje('Consultando personal activo...');
+
+    const personal = await llamarAPI({
+      action: 'listarCredenciales',
+      tokenSesion: tokenSesion
+    });
+
+    if (!personal || personal.length === 0) {
+      mostrarMensaje('No hay trabajadores activos para generar credenciales.');
+      return;
+    }
+
+    mostrarMensaje(
+      'Se encontraron ' + personal.length +
+      ' trabajadores. Preparando credenciales...'
+    );
+
+    for (const trabajador of personal) {
+      const foto = await llamarAPI({
+        action: 'obtenerFotografia',
+        tokenSesion: tokenSesion,
+        idTrabajador: trabajador.id
+      });
+
+      const imagen = 'data:' + foto.tipo +
+        ';base64,' + foto.imagenBase64;
+
+      const logoURL =
+        'https://drive.google.com/uc?export=view&id=155uUIl5EyLNmmjlV5KwkIeQXhVf6Bm7h';
+
+      const logo = await cargarImagenPDF(logoURL);
+
+      const pdf = new jspdf.jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: [85.6, 54]
+      });
+
+      // Fondo de la credencial
+      pdf.setFillColor(24, 20, 38);
+      pdf.rect(0, 0, 85.6, 54, 'F');
+
+      // Franja superior
+      pdf.setFillColor(139, 105, 205);
+      pdf.rect(0, 0, 85.6, 13, 'F');
+
+      // Logotipo
+      pdf.addImage(logo, 'PNG', 3, 2, 10, 9);
+
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(7);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('IDENTIFICACIÓN DE PERSONAL', 15, 6);
+      pdf.setFontSize(5);
+      pdf.text('QR-SHE 2.0', 15, 9);
+
+      // Fotografía
+      pdf.addImage(imagen, 'JPEG', 4, 17, 21, 25);
+
+      // Datos personales
+      pdf.setFontSize(7);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(
+        pdf.splitTextToSize(trabajador.nombre, 54),
+        28,
+        19
+      );
+
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(5.5);
+
+      let y = 26;
+      const lineas = [
+        'Puesto: ' + trabajador.puesto,
+        'Especialidad: ' + trabajador.especialidad,
+        'Empresa: ' + trabajador.empresa,
+        'Sangre: ' + trabajador.tipoSangre,
+        'Alergias: ' + trabajador.alergias
+      ];
+
+      lineas.forEach(texto => {
+        const partes = pdf.splitTextToSize(texto, 53);
+        pdf.text(partes, 28, y);
+        y += partes.length * 3.2;
+      });
+
+      // QR
+      const contenedorQR = document.createElement('div');
+      new QRCode(contenedorQR, {
+        text: trabajador.token,
+        width: 160,
+        height: 160,
+        correctLevel: QRCode.CorrectLevel.M
+      });
+
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const qr = contenedorQR.querySelector('canvas')
+        .toDataURL('image/png');
+
+      pdf.addImage(qr, 'PNG', 66, 35, 15, 15);
+
+      // Emergencias
+      pdf.setFontSize(4.5);
+      pdf.text(
+        'Emergencia: ' + trabajador.contactoEmergencia,
+        4,
+        47
+      );
+      pdf.text(
+        'Tel: ' + trabajador.telefonoEmergencia,
+        4,
+        50
+      );
+
+      pdf.save('QR-SHE-' + trabajador.id + '.pdf');
+    }
+
+    mostrarMensaje(
+      'Credenciales generadas: ' + personal.length
+    );
+
+  } catch (error) {
+    mostrarMensaje(
+      'No se pudieron generar las credenciales: ' + error.message
+    );
+  }
+}
+
+function cargarImagenPDF(url) {
+  return new Promise((resolve, reject) => {
+    const imagen = new Image();
+    imagen.crossOrigin = 'anonymous';
+
+    imagen.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = imagen.naturalWidth;
+      canvas.height = imagen.naturalHeight;
+
+      canvas.getContext('2d').drawImage(imagen, 0, 0);
+
+      resolve(canvas.toDataURL('image/png'));
+    };
+
+    imagen.onerror = () => reject(
+      new Error('No se pudo cargar el logotipo de la empresa.')
+    );
+
+    imagen.src = url;
+  });
+}
 
 </script>
 
