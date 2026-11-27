@@ -387,9 +387,19 @@ async function iniciarSesion() {
 }
 
 async function activarLector() {
+
+  if (!tokenSesion) {
+    mostrarMensaje('Tu sesión SHE no está activa. Inicia sesión nuevamente.');
+    return;
+  }
+
+  if (lectorQR && lectorQR.isScanning) {
+    mostrarMensaje('El lector QR ya está activo.');
+    return;
+  }
+
   const boton = document.getElementById('btnLector');
   boton.disabled = true;
-
   try {
     if (!lectorQR) {
       lectorQR = new Html5Qrcode('lector');
